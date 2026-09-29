@@ -1,15 +1,14 @@
 /**
  * runInBackground(label, task)
  *
- * On Cloudflare Pages, work still pending when a route returns its response
- * can be cancelled. This registers the task with ctx.waitUntil() so it runs to
- * completion without delaying the response. Outside Cloudflare (next dev /
- * next start) there is no request context, so the task is simply awaited.
+ * Schedules non-critical work to finish after the response is sent.
+ * On Vercel, next/server `after()` keeps the task alive via waitUntil.
+ * Outside a request (next dev without a request scope) it is awaited instead.
  *
  * Use ONLY for non-critical side effects (marketing lists, shipment sync).
  * Emails the customer is waiting for should be awaited directly.
  */
-import { getRequestContext } from '@cloudflare/next-on-pages';
+import { after } from 'next/server';
 
 export async function runInBackground(label: string, task: Promise<unknown>): Promise<void> {
     const safe = task.then(
@@ -17,8 +16,8 @@ export async function runInBackground(label: string, task: Promise<unknown>): Pr
         (err) => { console.error(`[background] ${label} failed:`, err); },
     );
     try {
-        getRequestContext().ctx.waitUntil(safe);
+        after(safe);
     } catch {
-        await safe; // not running on Cloudflare — just finish it here
+        await safe;
     }
 }
