@@ -1,0 +1,20 @@
+name = "hookahstore-website"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+# ── Public environment variables ONLY ────────────────────────────────────────
+# Never put secrets in this file — it is committed to git.
+# ALL secrets live in Cloudflare → Workers & Pages → hookahstore-website →
+# Settings → Variables and Secrets (type "Secret"), for Production AND Preview:
+#   WOOCOMMERCE_CONSUMER_KEY, WOOCOMMERCE_CONSUMER_SECRET, JWT_SECRET,
+#   RAZORPAY_KEY_SECRET, RESEND_API_KEY, WP_ADMIN_USERNAME, WP_ADMIN_APP_PASSWORD,
+#   WHOLESALE_WEBHOOK_SECRET, ADMIN_PASSWORD, SHIPROCKET_EMAIL, SHIPROCKET_PASSWORD,
+#   BREVO_API_KEY
+# NOTE: RAZORPAY key IDs below are TEST keys (rzp_test_…) — switch to live keys for production.
+[vars]
+NEXT_PUBLIC_GRAPHQL_URL = "https://cms.thehookahstore.in/graphql"
+NEXT_PUBLIC_RAZORPAY_KEY_ID = "rzp_test_S6y9y4RyOEd0CO"
+NEXT_PUBLIC_APP_URL = "https://thehookahstore.in"
+WOOCOMMERCE_URL = "https://cms.thehookahstore.in"
+RAZORPAY_KEY_ID = "rzp_test_S6y9y4RyOEd0CO"

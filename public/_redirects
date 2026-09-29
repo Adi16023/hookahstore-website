@@ -1,0 +1,6 @@
+# Cloudflare Pages redirects
+#
+# Wholesale subdomain routing is handled in middleware.ts, NOT here:
+#   - wholesale.thehookahstore.in/*        → rewritten to /wholesale/*
+#   - thehookahstore.in/wholesale[/*]      → 301 to wholesale.thehookahstore.in/*
+# A domain-level rule here would double-prefix paths (/wholesale/wholesale/...).

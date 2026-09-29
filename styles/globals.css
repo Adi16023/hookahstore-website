@@ -1,0 +1,352 @@
+@import "tailwindcss";
+
+/* Montserrat is self-hosted by next/font (app/layout.tsx) and exposed as
+   --font-montserrat. .font-montserrat replaces the old font-['Montserrat']. */
+.font-montserrat { font-family: var(--font-montserrat), sans-serif; }
+
+/* Blog surfaces (moved from the inline <style> in app/layout.tsx) */
+html[data-dark="true"] .blog-bg { background-color: transparent !important; }
+html:not([data-dark="true"]) .blog-bg { background-color: #ffffff !important; }
+html[data-dark="true"] .blog-alt-bg { background-color: transparent !important; }
+html:not([data-dark="true"]) .blog-alt-bg { background-color: #f6f5f8 !important; }
+html[data-dark="true"] .blog-header { background-color: #1a1a1a !important; border-bottom-color: #2e2e2e !important; }
+html:not([data-dark="true"]) .blog-header { background-color: #ffffff !important; border-bottom-color: #ebebed !important; }
+
+/* ── CSS Design Tokens — auto-switch on data-dark ────────────────────────────
+   These variables are the single source of truth for ALL theme colours.
+   Any element using var(--clr-*) will switch instantly when html[data-dark]
+   is toggled — no useTheme() required.
+─────────────────────────────────────────────────────────────────────────────── */
+:root {
+    --clr-bg:           #f5f4f0;
+    --clr-surface:      #ffffff;
+    --clr-surface-2:    #f0eeea;
+    --clr-surface-3:    #e8e6df;
+    --clr-text:         #111111;
+    --clr-text-muted:   #666666;
+    --clr-text-subtle:  #999999;
+    --clr-border:       #e4e4e4;
+    --clr-border-soft:  #efefef;
+    --clr-input-bg:     #ffffff;
+    --clr-input-border: #bcbec4;
+    --clr-overlay:      rgba(0,0,0,0.05);
+}
+
+html[data-dark="true"] {
+    --clr-bg:           #0a0a0a;
+    --clr-surface:      #111111;
+    --clr-surface-2:    #181818;
+    --clr-surface-3:    #202020;
+    --clr-text:         #f0f0f0;
+    --clr-text-muted:   rgba(255,255,255,0.55);
+    --clr-text-subtle:  rgba(255,255,255,0.35);
+    --clr-border:       #2e2e2e;
+    --clr-border-soft:  #1e1e1e;
+    --clr-input-bg:     rgba(255,255,255,0.07);
+    --clr-input-border: #444444;
+    --clr-overlay:      rgba(255,255,255,0.04);
+}
+
+/* ── Global base — body inherits tokens so ALL descendants auto-switch ─────── */
+body {
+    color: var(--clr-text);
+    background-color: var(--clr-bg);
+    transition: color 200ms ease, background-color 300ms ease;
+}
+
+/* ── Reusable utility classes ────────────────────────────────────────────────
+   Apply these to containers instead of inline dark ? '#fff' : '#000' checks
+─────────────────────────────────────────────────────────────────────────────── */
+.theme-bg      { background-color: var(--clr-bg); }
+.theme-surface { background-color: var(--clr-surface); }
+.theme-card    { background-color: var(--clr-surface-2); border: 1px solid var(--clr-border); }
+.theme-text    { color: var(--clr-text); }
+.theme-muted   { color: var(--clr-text-muted); }
+.theme-border  { border-color: var(--clr-border); }
+
+/* ── Global input / select / textarea auto-theme ─────────────────────────────
+   Every form field in the site gets dark/light mode for free.
+─────────────────────────────────────────────────────────────────────────────── */
+html[data-dark="true"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+html[data-dark="true"] select,
+html[data-dark="true"] textarea {
+    background-color: var(--clr-input-bg) !important;
+    border-color: var(--clr-input-border) !important;
+    color: var(--clr-text) !important;
+    color-scheme: dark;
+}
+
+html:not([data-dark="true"]) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+html:not([data-dark="true"]) select,
+html:not([data-dark="true"]) textarea {
+    background-color: var(--clr-input-bg);
+    border-color: var(--clr-input-border);
+    color: var(--clr-text);
+    color-scheme: light;
+}
+
+/* ── Scrollbar — adapts to theme ────────────────────────────────────────────── */
+html[data-dark="true"] {
+    scrollbar-color: #333 #111;
+}
+html:not([data-dark="true"]) {
+    scrollbar-color: #ccc #f5f4f0;
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.animate-marquee {
+    animation: marquee 20s linear infinite;
+}
+
+/* Top warning banner — never pauses (no :hover / play-state rules on purpose) */
+.animate-marquee-infinite {
+    animation: marquee 60s linear infinite;
+}
+
+/* Reduced motion: keep scrolling (warning must stay readable), just slower */
+@media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+        animation-duration: 60s;
+    }
+    .animate-marquee-infinite {
+        animation-duration: 180s;
+    }
+}
+
+/* Header / logo / nav / body / page-background flash-prevention rules live
+   ONLY in the inline <style> in app/layout.tsx (they must apply before this
+   stylesheet loads). */
+
+/* ── WordPress post content typography ──────────────────────────────────── */
+/* Target both native tags AND Gutenberg block classes; !important overrides Tailwind preflight */
+.wp-content h1,
+.wp-content h2,
+.wp-content h3,
+.wp-content h4,
+.wp-content h5,
+.wp-content h6,
+.wp-content .wp-block-heading {
+    font-family: var(--font-montserrat), sans-serif !important;
+    font-weight: 600 !important;
+    margin-top: 2rem !important;
+    margin-bottom: 0.75rem !important;
+    line-height: 1.3 !important;
+}
+
+.wp-content h1 {
+    font-size: 2rem !important;
+}
+
+.wp-content h2,
+.wp-content .wp-block-heading {
+    font-size: 1.5rem !important;
+    line-height: 2.1rem !important;
+}
+
+.wp-content h3 {
+    font-size: 1.25rem !important;
+    line-height: 1.9rem !important;
+}
+
+.wp-content h4 {
+    font-size: 1.1rem !important;
+}
+
+.wp-content p {
+    font-family: var(--font-montserrat), sans-serif !important;
+    font-size: 1rem !important;
+    line-height: 1.75rem !important;
+    margin-bottom: 1.25rem !important;
+    font-weight: 400 !important;
+}
+
+.wp-content ul,
+.wp-content ol,
+.wp-content .wp-block-list {
+    font-family: var(--font-montserrat), sans-serif !important;
+    padding-left: 1.75rem !important;
+    margin-bottom: 1.25rem !important;
+    font-weight: 400 !important;
+}
+
+.wp-content ul,
+.wp-content ul.wp-block-list {
+    list-style: disc !important;
+}
+
+.wp-content ol {
+    list-style: decimal !important;
+}
+
+.wp-content li {
+    font-size: 1rem !important;
+    line-height: 1.75rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.wp-content a {
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.wp-content strong,
+.wp-content b {
+    font-weight: 700 !important;
+}
+
+.wp-content figure.wp-block-image {
+    margin: 1.5rem 0 !important;
+}
+
+.wp-content figure.wp-block-image img {
+    max-width: 100% !important;
+    border-radius: 8px !important;
+    display: block;
+}
+
+.wp-content img {
+    max-width: 100% !important;
+    border-radius: 8px !important;
+    margin: 1.5rem 0 !important;
+}
+
+.wp-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+.wp-content th,
+.wp-content td {
+    border: 1px solid #ebebed;
+    padding: 0.75rem;
+    text-align: left;
+    font-size: 1rem;
+}
+
+.wp-content blockquote {
+    border-left: 4px solid #857149;
+    padding: 0.75rem 1.25rem;
+    margin: 1.5rem 0;
+    font-style: italic;
+    opacity: 0.85;
+}
+
+.wp-content hr {
+    border: none;
+    border-top: 2px solid #808080;
+    width: 90px;
+    margin: 2.5rem 0;
+}
+
+/* Dark mode overrides */
+[data-dark="true"] .wp-content a {
+    color: #a78bfa;
+}
+
+[data-dark="true"] .wp-content th,
+[data-dark="true"] .wp-content td {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-dark="true"] .wp-content blockquote {
+    border-color: #a78bfa;
+}
+
+/* ── Homepage vertical spacing system ──────────────────────────────────────
+   .hp-section  — the outer brand section wrapper (position:relative for bg images)
+   .hp-inner    — optional inner container if needed
+
+   Padding (not margin) is used on every side so:
+     • No margin-collapse between adjacent sections
+     • Box-shadows from product cards are never clipped by a collapsed margin edge
+     • The absolute-positioned decorative background images stay inside their parent
+
+   Breakpoints:
+     Desktop  (≥ 1025px) : 80px top & bottom
+     Tablet   (640–1024px): 60px top & bottom
+     Mobile   (< 640px)  : 40px top & bottom
+─────────────────────────────────────────────────────────────────────────────── */
+.hp-section {
+    position: relative;
+    /* Remove any inherited margin that could collapse. */
+    margin: 0;
+    padding-top: 80px;
+    padding-bottom: 80px;
+}
+
+@media (min-width: 640px) and (max-width: 1024px) {
+    .hp-section {
+        padding-top: 60px;
+        padding-bottom: 60px;
+    }
+}
+
+@media (max-width: 639px) {
+    .hp-section {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+}
+
+/* ── Homepage brand logo theme switching ───────────────────────────────────
+   Exactly mirrors the .logo-light / .logo-dark pattern already used in the
+   site header (set in layout.tsx's blocking script + globals.css).
+
+   Both logo variants live in the same fixed-size container, stacked on top of
+   each other with position:absolute. Only one is ever visible at a time —
+   no layout shift, no size difference, no flicker.
+
+   Dark mode  (html[data-dark="true"]) : white logo shown, black hidden
+   Light mode (html:not([data-dark]))  : black logo shown, white hidden
+
+   The blocking script in layout.tsx sets data-dark BEFORE any paint, so the
+   correct logo is shown from the very first frame — identical to the header.
+─────────────────────────────────────────────────────────────────────────────── */
+
+/* ── Dark mode (default) — show white, hide black ── */
+html[data-dark="true"] .brand-logo-white {
+    display: block !important;
+}
+html[data-dark="true"] .brand-logo-black {
+    display: none !important;
+}
+
+/* ── Light mode — show black, hide white ── */
+html:not([data-dark="true"]) .brand-logo-white {
+    display: none !important;
+}
+html:not([data-dark="true"]) .brand-logo-black {
+    display: block !important;
+}
+
+/* ── Homepage brand BG theme switching ─────────────────────────────────────
+   Same pattern as logo switching above.
+   White BG decorations shown in dark mode, black BG decorations in light mode.
+   Both images share the same container via position:absolute, no layout shift.
+─────────────────────────────────────────────────────────────────────────────── */
+
+/* ── Dark mode — show white BG, hide black BG ── */
+html[data-dark="true"] .brand-bg-white {
+    display: block !important;
+}
+html[data-dark="true"] .brand-bg-black {
+    display: none !important;
+}
+
+/* ── Light mode — show black BG, hide white BG ── */
+html:not([data-dark="true"]) .brand-bg-white {
+    display: none !important;
+}
+html:not([data-dark="true"]) .brand-bg-black {
+    display: block !important;
+}

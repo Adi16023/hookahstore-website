@@ -1,0 +1,225 @@
+/*
+ * Wholesale Admin Manager — Admin Stylesheet
+ *
+ * Uses native WordPress admin CSS variables and class conventions so the
+ * plugin feels at home inside the WP admin.  No external dependencies.
+ *
+ * @package WholesaleAdminManager
+ */
+
+/* ==========================================================================
+   Layout / Wrap
+   ========================================================================== */
+
+.wam-wrap {
+	margin-top: 16px;
+}
+
+.wam-wrap .wp-heading-inline {
+	margin-right: 8px;
+	vertical-align: middle;
+}
+
+/* ==========================================================================
+   Badge (count pill next to the page title)
+   ========================================================================== */
+
+.wam-badge {
+	display: inline-block;
+	min-width: 22px;
+	padding: 2px 8px;
+	border-radius: 12px;
+	background: #d63638;
+	color: #fff;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.6;
+	vertical-align: middle;
+}
+
+.wam-badge-success {
+	background: #00a32a;
+}
+
+/* ==========================================================================
+   Filters bar
+   ========================================================================== */
+
+.wam-filters {
+	margin: 16px 0;
+}
+
+.wam-filters form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.wam-filter-input {
+	min-width: 180px;
+}
+
+/* ==========================================================================
+   Main Table
+   ========================================================================== */
+
+.wam-table {
+	margin-top: 4px;
+	border-collapse: collapse;
+}
+
+/* Column widths — fine-tuned so content is legible without horizontal scroll */
+.wam-table .column-id       { width: 90px;  }
+.wam-table .column-name     { width: 130px; }
+.wam-table .column-email    { width: 180px; word-break: break-all; }
+.wam-table .column-business { width: 140px; }
+.wam-table .column-address  { width: 160px; }
+.wam-table .column-phone    { width: 110px; }
+.wam-table .column-gst      { width: 130px; }
+.wam-table .column-website  { width: 140px; word-break: break-all; }
+.wam-table .column-docs     { width: 200px; }
+.wam-table .column-date     { width: 130px; }
+.wam-table .column-actions  { width: 140px; }
+
+/* Customers page column tweaks */
+.wam-customers-table .column-orders   { width: 80px;  text-align: center; }
+.wam-customers-table .column-approved { width: 120px; }
+
+.wam-table th,
+.wam-table td {
+	padding: 10px 12px;
+	vertical-align: top;
+}
+
+.wam-table code {
+	background: #f0f0f1;
+	padding: 2px 5px;
+	border-radius: 3px;
+	font-size: 12px;
+	color: #3c434a;
+}
+
+/* Empty state cell */
+.wam-table .wam-empty {
+	text-align: center;
+	padding: 40px 12px;
+	color: #787c82;
+	font-style: italic;
+}
+
+/* ==========================================================================
+   Documents column
+   ========================================================================== */
+
+.wam-docs {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.wam-doc-link {
+	display: inline-block;
+	padding: 3px 8px;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 500;
+	text-decoration: none;
+	white-space: nowrap;
+	transition: opacity 0.15s ease;
+}
+
+.wam-doc-link:hover {
+	opacity: 0.8;
+	text-decoration: underline;
+}
+
+.wam-doc-gst {
+	background: #e8f0fe;
+	color: #1a73e8;
+	border: 1px solid #c5d7f9;
+}
+
+.wam-doc-license {
+	background: #fce8e6;
+	color: #c62828;
+	border: 1px solid #f5c6c4;
+}
+
+.wam-doc-identity {
+	background: #e6f4ea;
+	color: #188038;
+	border: 1px solid #a8d5b5;
+}
+
+.wam-no-docs {
+	color: #787c82;
+	font-style: italic;
+	font-size: 12px;
+}
+
+/* ==========================================================================
+   Actions column — approve / reject buttons
+   ========================================================================== */
+
+.wam-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.wam-action-form {
+	margin: 0;
+	padding: 0;
+}
+
+.wam-btn-approve {
+	background: #00a32a !important;
+	border-color: #00a32a !important;
+	color: #fff !important;
+	width: 100%;
+	text-align: center;
+}
+
+.wam-btn-approve:hover,
+.wam-btn-approve:focus {
+	background: #008a20 !important;
+	border-color: #008a20 !important;
+}
+
+.wam-btn-reject {
+	background: #fff;
+	border-color: #d63638 !important;
+	color: #d63638 !important;
+	width: 100%;
+	text-align: center;
+}
+
+.wam-btn-reject:hover,
+.wam-btn-reject:focus {
+	background: #fce8e6 !important;
+}
+
+/* ==========================================================================
+   Pagination
+   ========================================================================== */
+
+.tablenav .tablenav-pages {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	float: none;
+	margin-top: 12px;
+}
+
+.tablenav .pagination-links {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.tablenav .pagination-links .paging-input {
+	margin: 0 4px;
+	font-size: 13px;
+	color: #3c434a;
+}
