@@ -552,19 +552,19 @@ function NewUserCard({ email, onBack, onSuccess, onContinueAsGuest, c }: {
 }
 
 /* ─── Completed step chip ────────────────────────────────────────────────── */
-function CompletedStep({ title, summary, onEdit, c }: { title: string; summary: string; onEdit: () => void; c: C }) {
+function CompletedStep({ title, summary, onEdit, c }: { title: string; summary: string; onEdit?: () => void; c: C }) {
     return (
         <div style={{ backgroundColor: c.cardBg, borderRadius: 8, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, transition: 'background-color 200ms' }}>
             <div style={{ minWidth: 0 }}>
                 <p style={{ fontFamily: M, fontWeight: 600, fontSize: 14, color: c.inactiveStep, margin: '0 0 2px', letterSpacing: '0.5px', textTransform: 'capitalize', transition: 'color 200ms' }}>{title}</p>
                 <p style={{ fontFamily: M, fontWeight: 400, fontSize: 13, color: c.meta, margin: 0, lineHeight: '18px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', transition: 'color 200ms' }}>{summary}</p>
             </div>
-            <button onClick={onEdit} aria-label="Edit" style={{ background: 'none', border: `1px solid ${c.cardBorder}`, borderRadius: 9999, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, transition: 'border-color 200ms' }}>
+            {onEdit && <button onClick={onEdit} aria-label="Edit" style={{ background: 'none', border: `1px solid ${c.cardBorder}`, borderRadius: 9999, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, transition: 'border-color 200ms' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={c.meta} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
-            </button>
+            </button>}
         </div>
     );
 }
@@ -1021,7 +1021,8 @@ function MakePaymentCard({ subtotal, shippingCost, discountAmount = 0, appliedCo
 export default function CartPageClient() {
 
     const { dark } = useTheme();
-    const { refresh } = useAuth();
+    const auth = useAuth();
+    const signedIn = auth.role !== 'loading' && auth.role !== 'not_approved' && auth.userId != null;
     const { cart, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
     const [userState, setUserState] = useState<UserState>('guest');
     const [checkoutStep, setCheckoutStep] = useState<'step1' | 'step2' | 'step3' | 'step4' | 'step5'>('step1');
@@ -1065,7 +1066,18 @@ export default function CartPageClient() {
     const handleSetNew = () => setUserState('new');
     const handleContinueAsGuest = () => setCheckoutStep('step2');
     const handleBack = () => { setUserState('guest'); setCheckoutStep('step1'); };
-    const handleAuthSuccess = () => { refresh(); setCheckoutStep('step2'); };
+    const handleAuthSuccess = () => { auth.refresh(); setCheckoutStep('step2'); };
+
+    useEffect(() => {
+        if (!signedIn) return;
+        if (auth.email) setEmail(auth.email);
+        setShippingForm(form => ({
+            ...form,
+            firstName: form.firstName || auth.firstName || '',
+            lastName: form.lastName || auth.lastName || '',
+        }));
+        setCheckoutStep(step => (step === 'step1' ? 'step2' : step));
+    }, [signedIn, auth.email, auth.firstName, auth.lastName]);
     const handleShippingNext = () => setCheckoutStep('step3');
     const handleShippingMethodNext = () => setCheckoutStep('step4');
     const [customerDob, setCustomerDob] = useState('');
@@ -1107,7 +1119,12 @@ export default function CartPageClient() {
                     <div className="min-[768px]:flex-1 flex flex-col gap-3 px-4 min-[768px]:px-0">
 
                         {/* ── Step 1 – Auth ── */}
-                        {checkoutStep === 'step1' && (
+                        {checkoutStep === 'step1' && auth.role === 'loading' && (
+                            <div style={{ backgroundColor: c.cardBg, borderRadius: 8, padding: 24 }}>
+                                <p style={{ fontFamily: M, fontWeight: 400, fontSize: 14, color: c.body, margin: 0 }}>Checking your account…</p>
+                            </div>
+                        )}
+                        {checkoutStep === 'step1' && auth.role !== 'loading' && !signedIn && (
                             userState === 'existing'
                                 ? <ExistingUserCard email={email} onBack={handleBack} onSuccess={handleAuthSuccess} c={c} />
                                 : userState === 'new'
@@ -1115,7 +1132,12 @@ export default function CartPageClient() {
                                     : <GuestCard email={email} setEmail={setEmail} onSetExisting={handleSetExisting} onSetNew={handleSetNew} onContinueAsGuest={handleContinueAsGuest} c={c} />
                         )}
                         {checkoutStep !== 'step1' && (
-                            <CompletedStep title="Email Address" summary={authSummary} onEdit={() => { setCheckoutStep('step1'); setUserState('guest'); }} c={c} />
+                            <CompletedStep
+                                title="Email Address"
+                                summary={authSummary}
+                                onEdit={signedIn ? undefined : () => { setCheckoutStep('step1'); setUserState('guest'); }}
+                                c={c}
+                            />
                         )}
 
                         {/* ── Step 2 – Shipping Address ── */}
