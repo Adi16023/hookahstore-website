@@ -15,8 +15,9 @@ import {
     SESSION_MAX_AGE,
 } from '../../../../lib/auth';
 import { wcPut } from '../../../../lib/woocommerce';
+import { getPublicAppUrl } from '../../../../lib/config';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+const APP_URL = getPublicAppUrl();
 
 export async function GET(req: NextRequest) {
     const token = req.nextUrl.searchParams.get('token');

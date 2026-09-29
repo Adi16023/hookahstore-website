@@ -67,6 +67,8 @@ const LOCAL_RETAIL_HOST = 'thehookahstore.local';
 const LOCAL_WHOLESALE_HOST = 'wholesale.thehookahstore.local';
 export const PROD_RETAIL_HOST = 'thehookahstore.in';
 export const PROD_WHOLESALE_HOST = 'wholesale.thehookahstore.in';
+/** Canonical storefront origin. Apex redirects here. */
+export const PROD_RETAIL_ORIGIN = 'https://www.thehookahstore.in';
 /** Retail hostnames that must 301 their /wholesale/* paths to the subdomain (middleware). */
 export const PROD_RETAIL_HOSTS = [PROD_RETAIL_HOST, `www.${PROD_RETAIL_HOST}`];
 /** Local wholesale origin — middleware treats host localhost:3001 as the wholesale subdomain. */
@@ -93,16 +95,36 @@ export function getWholesaleUrl(path = ''): string {
     return `https://${PROD_WHOLESALE_HOST}${path}`;
 }
 
+const LOCALHOST_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
+
+/**
+ * Public site origin for links and emails.
+ * A localhost NEXT_PUBLIC_APP_URL is ignored outside local dev, so a
+ * production build never emits http://localhost links.
+ */
+export function getPublicAppUrl(): string {
+    const configured = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
+    if (isLocalDev()) return configured || 'http://localhost:3000';
+    if (configured && !LOCALHOST_ORIGIN.test(configured)) {
+        try {
+            if (new URL(configured).host === PROD_RETAIL_HOST) return PROD_RETAIL_ORIGIN;
+        } catch {
+            /* keep the configured value */
+        }
+        return configured;
+    }
+    return PROD_RETAIL_ORIGIN;
+}
+
 /**
  * Build the retail URL.
- * Dev  → "/" (relative)
- * Prod → "https://thehookahstore.in"
+ * Dev  → relative path
+ * Prod → https://www.thehookahstore.in
  */
 export function getRetailUrl(path = ''): string {
-    if (isLocalDev()) {
-        return `/${path}`.replace('//', '/');
-    }
-    return `https://${PROD_RETAIL_HOST}${path}`;
+    const normalized = path === '' ? '' : (path.startsWith('/') ? path : `/${path}`);
+    if (isLocalDev()) return normalized || '/';
+    return `${getPublicAppUrl()}${normalized}`;
 }
 
 /**

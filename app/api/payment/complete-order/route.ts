@@ -7,6 +7,7 @@ import { parseIsoDob, isOfAge, MIN_AGE, DOB_META_KEY } from '../../../../lib/uti
 import { razorpayCreds, verifyCheckoutSignature, fetchRazorpayOrder, fetchRazorpayPayment } from '../../../../lib/checkout/razorpay';
 import { cartHash, parseCartLines, CheckoutError } from '../../../../lib/checkout/quote';
 import { getServerSession } from '../../../../lib/auth/session-server';
+import { getPublicAppUrl } from '../../../../lib/config';
 
 const COUNTRY_CODES: Record<string, string> = {
     'India': 'IN', 'United States': 'US', 'United Kingdom': 'GB',
@@ -160,7 +161,7 @@ export async function POST(req: NextRequest) {
         }) as { id: number; number: string; date_created: string };
 
         // Fire-and-forget: create Shiprocket shipment (non-blocking)
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+        const appUrl = getPublicAppUrl();
         const orderDateStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
         const totalWeight = Math.max(
             0.5,

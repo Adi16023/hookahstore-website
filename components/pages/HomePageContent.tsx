@@ -7,6 +7,7 @@ import Link from 'next/link';
 import type { AcfHeroSlide, HomepageBrandsData, HomepageProduct, WPPost } from '../../lib/graphql';
 import MarqueeBar from '../layout/MarqueeBar';
 import { FREE_SHIPPING_TEXT } from '../../lib/config/site';
+import { getPublicAppUrl } from '../../lib/config';
 
 interface HomePageContentProps {
     isWholesale?: boolean;
@@ -32,7 +33,7 @@ function wpText(html: string | null | undefined, max?: number): string {
 
 export default function HomePageContent({ isWholesale = false, acfHeroSlides = [], brandProducts, blogPosts = [] }: HomePageContentProps) {
     // Blog lives on the retail site — absolute links from the wholesale subdomain
-    const blogBase = isWholesale ? (process.env.NEXT_PUBLIC_APP_URL ?? '') : '';
+    const blogBase = isWholesale ? getPublicAppUrl() : '';
     // Extract per-brand product arrays, defaulting to empty if WordPress returned nothing.
     const empty: HomepageProduct[] = [];
     const alfakherProducts = brandProducts?.alfakher?.nodes ?? empty;

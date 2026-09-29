@@ -28,8 +28,9 @@ import { runInBackground } from '../../../../lib/utils/background';
 import { wcSetCustomerRole, wcSetWholesaleMeta } from '../../../../lib/woocommerce/wholesale';
 import { wcPut } from '../../../../lib/woocommerce';
 import { parseIsoDob, isOfAge, MIN_AGE, DOB_META_KEY } from '../../../../lib/utils/dob';
+import { getPublicAppUrl } from '../../../../lib/config';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+const APP_URL = getPublicAppUrl();
 
 export async function POST(req: NextRequest) {
     try {

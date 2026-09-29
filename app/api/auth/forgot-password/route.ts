@@ -14,10 +14,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createResetToken, generateNonce } from '../../../../lib/auth';
 import { wcGetCustomerByEmail } from '../../../../lib/woocommerce';
 import { sendPasswordResetEmail } from '../../../../lib/email/send-emails';
-import { getWholesaleUrl } from '../../../../lib/config';
+import { getPublicAppUrl, getWholesaleUrl } from '../../../../lib/config';
 
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+const APP_URL = getPublicAppUrl();
 
 export async function POST(req: NextRequest) {
     try {

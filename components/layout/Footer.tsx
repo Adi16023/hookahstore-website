@@ -5,11 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import SiteLogo from "./SiteLogo";
 import { SITE, LEGAL_LINES, mailtoHref, FREE_SHIPPING_TEXT } from "../../lib/config/site";
-import { getWholesaleUrl } from "../../lib/config";
+import { getRetailUrl, getWholesaleUrl } from "../../lib/config";
 import { TOP_CATEGORIES } from "../../lib/config/categories";
-
-// Absolute base for retail links — works correctly from the wholesale subdomain too
-const R = process.env.NEXT_PUBLIC_APP_URL ?? '';
 
 // ── Static asset paths ──
 const imgPhone = "/footer-assets/a28728b99c945bce22bbf4edcb916d4116ddb6da.png";
@@ -213,22 +210,22 @@ const supportLinks = [
 ];
 
 const navHrefs: Record<string, Record<string, string>> = {
-    shop: Object.fromEntries(TOP_CATEGORIES.map(t => [t.label, `${R}${t.href}`])),
+    shop: Object.fromEntries(TOP_CATEGORIES.map(t => [t.label, getRetailUrl(t.href)])),
     about: {
-        "About Us": `${R}/about`,
-        "Blog": `${R}/blog`,
-        "FAQs": `${R}/faqs`,
-        "Business Opportunities": `${R}/business-opportunities`,
-        "Coupon Codes": `${R}/coupons`,
+        "About Us": getRetailUrl("/about"),
+        "Blog": getRetailUrl("/blog"),
+        "FAQs": getRetailUrl("/faqs"),
+        "Business Opportunities": getRetailUrl("/business-opportunities"),
+        "Coupon Codes": getRetailUrl("/coupons"),
     },
     support: {
-        "Contact Us": `${R}/contact`,
-        "My Orders": `${R}/account/orders`,
-        "Shipping & Returns": `${R}/shipping-and-returns`,
-        "Accessibility": `${R}/accessibility-statement`,
-        "Terms and Conditions": `${R}/terms-and-conditions`,
-        "Privacy Policy": `${R}/privacy-policy`,
-        "Cookies Policy": `${R}/cookies-policy`,
+        "Contact Us": getRetailUrl("/contact"),
+        "My Orders": getRetailUrl("/account/orders"),
+        "Shipping & Returns": getRetailUrl("/shipping-and-returns"),
+        "Accessibility": getRetailUrl("/accessibility-statement"),
+        "Terms and Conditions": getRetailUrl("/terms-and-conditions"),
+        "Privacy Policy": getRetailUrl("/privacy-policy"),
+        "Cookies Policy": getRetailUrl("/cookies-policy"),
     },
 };
 
