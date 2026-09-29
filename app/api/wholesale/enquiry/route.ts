@@ -21,6 +21,7 @@ import { isValidEnquiryRef, newEnquiryRef } from '../../../../lib/wholesale/enqu
 import { sendWholesaleEnquiryAdminEmail, sendWholesaleEnquiryCustomerEmail } from '../../../../lib/email/send-emails';
 import type { EnquiryEmailData, EnquiryEmailLine } from '../../../../lib/email/render-email';
 import { getWholesaleUrl } from '../../../../lib/config';
+import { optionWeightKg, WHOLESALE_MAX_KG } from '../../../../lib/wholesale/weight';
 
 const MAX_LINES = 100;
 const MAX_QTY = 100000;
@@ -70,6 +71,18 @@ export async function POST(req: NextRequest) {
     const unavailable = lines.filter(l => !prices[l.productId]);
     if (unavailable.length) {
         return json({ error: 'Some items in your cart are no longer available. Please remove them and try again.', unavailable: unavailable.map(l => l.productId) }, 409);
+    }
+
+    const overWeight = lines.filter(l => {
+        const variation = l.variationId ? prices[l.productId].variations.find(v => v.id === l.variationId) : undefined;
+        const option = variation ? Object.values(variation.attributes).join(' / ') : null;
+        if (!option) return false;
+        const weight = option.split('/').map(part => optionWeightKg(part.trim())).find(w => w != null);
+        if (weight == null) return false;
+        return weight < 1 || weight * l.quantity > WHOLESALE_MAX_KG;
+    });
+    if (overWeight.length) {
+        return json({ error: 'Wholesale weight orders are 1–5 kg per product. Remove packs under 1 kg and keep each line at 5 kg or less.' }, 400);
     }
 
     const emailLines: EnquiryEmailLine[] = [];

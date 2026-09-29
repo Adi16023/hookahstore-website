@@ -17,6 +17,7 @@ import type { CartableProduct } from '../../../../components/providers/CartProvi
 import { useAuth } from '../../../../components/providers/AuthProvider';
 import { useWholesaleHref } from '../../../../lib/config/use-wholesale-path';
 import { useWholesalePricing, priceFor, formatInr } from '../../../../lib/wholesale/use-wholesale-prices';
+import { clampWholesaleKg, WHOLESALE_MAX_KG, WHOLESALE_MIN_KG } from '../../../../lib/wholesale/weight';
 import type { WholesaleProduct } from '../../../../lib/woocommerce/wholesale-catalog';
 
 /* ─── Shared icons ──────────────────────────────────────────────────────── */
@@ -39,18 +40,22 @@ function LockIcon() {
 /* ─── Main component ─────────────────────────────────────────────────────── */
 export default function WholesaleProductClient({ product }: { product: WholesaleProduct }) {
     const { dark } = useTheme();
-    const { addToCart } = useCart();
+    const { addToCart, cart } = useCart();
     const { role } = useAuth();
     const href = useWholesaleHref();
 
+    const sellsByKg = product.sellsByKg;
     const sizes = product.options;
+    const kgUnit = sellsByKg ? (sizes[0] ?? null) : null;
     const [selectedSize, setSelectedSize] = useState(sizes[0] ?? '');
     const [quantity, setQuantity] = useState(product.moq ?? 1);
+    const [kg, setKg] = useState(WHOLESALE_MIN_KG);
     const [addedFeedback, setAddedFeedback] = useState(false);
+    const [limitNote, setLimitNote] = useState('');
 
     const isApproved = role === 'wholesale_customer';
     const { loading: priceLoading, pricing } = useWholesalePricing(isApproved ? product.id : undefined);
-    const { price, variationId } = priceFor(pricing, selectedSize);
+    const { price, variationId } = priceFor(pricing, sellsByKg ? kgUnit : selectedSize);
 
     const handleAddToCart = () => {
         if (!isApproved) return;
@@ -60,7 +65,17 @@ export default function WholesaleProductClient({ product }: { product: Wholesale
             price: price != null ? formatInr(price) : '',
             image: { sourceUrl: product.image || '' },
         };
-        for (let i = 0; i < quantity; i++) addToCart(productObj, variationId, selectedSize || null);
+        const sizeLabel = sellsByKg ? kgUnit : (selectedSize || null);
+        const already = cart.find(item => item.productId === product.id && item.variationId === variationId)?.quantity ?? 0;
+        const requested = sellsByKg ? kg : quantity;
+        const room = sellsByKg ? Math.max(0, WHOLESALE_MAX_KG - already) : requested;
+        const times = sellsByKg ? Math.min(requested, room) : requested;
+        if (times < 1) {
+            setLimitNote(`Maximum is ${WHOLESALE_MAX_KG} kg.`);
+            return;
+        }
+        for (let i = 0; i < times; i++) addToCart(productObj, variationId, sizeLabel);
+        setLimitNote(sellsByKg && times < requested ? `Added ${times} kg. Maximum is ${WHOLESALE_MAX_KG} kg.` : '');
         setAddedFeedback(true);
         setTimeout(() => setAddedFeedback(false), 2000);
     };
@@ -142,11 +157,15 @@ export default function WholesaleProductClient({ product }: { product: Wholesale
                             </p>
                         )}
 
-                        {product.moq && (
+                        {sellsByKg ? (
+                            <p style={{ fontSize: 13, color: textMuted, margin: 0 }}>
+                                Sold by the kilogram, from <strong style={{ color: textPrim }}>1 kg</strong> up to <strong style={{ color: textPrim }}>5 kg</strong>.
+                            </p>
+                        ) : product.moq ? (
                             <p style={{ fontSize: 13, color: textMuted, margin: 0 }}>
                                 Minimum order: <strong style={{ color: textPrim }}>{product.moq} units</strong>
                             </p>
-                        )}
+                        ) : null}
 
                         <div style={{ borderTop: `1px solid ${border}` }} />
 
@@ -156,8 +175,8 @@ export default function WholesaleProductClient({ product }: { product: Wholesale
                             loginButton
                         ) : (
                             <>
-                                {/* Size selector */}
-                                {sizes.length > 0 && (
+                                {/* Size selector — weight products use a kg amount instead of 50g packs */}
+                                {!sellsByKg && sizes.length > 0 && (
                                     <div>
                                         <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: textMuted, marginBottom: 12, transition: 'color 200ms' }}>
                                             {product.optionName ?? 'Size'}: <span style={{ color: textPrim }}>{selectedSize}</span>
@@ -192,25 +211,48 @@ export default function WholesaleProductClient({ product }: { product: Wholesale
                                         <p style={{ fontSize: price != null ? 32 : 22, fontWeight: 800, color: textPrim, margin: 0, transition: 'color 200ms' }}>
                                             {price != null ? formatInr(price) : 'Price on request'}
                                         </p>
-                                        {price != null && <span style={{ fontSize: 13, color: textMuted, transition: 'color 200ms' }}>your wholesale price</span>}
+                                        {price != null && <span style={{ fontSize: 13, color: textMuted, transition: 'color 200ms' }}>{sellsByKg ? 'per kg' : 'your wholesale price'}</span>}
                                     </div>
                                 )}
 
                                 <div style={{ borderTop: `1px solid ${border}` }} />
 
-                                <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: textMuted, margin: 0, transition: 'color 200ms' }}>Quantity</p>
+                                <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: textMuted, margin: 0, transition: 'color 200ms' }}>
+                                    {sellsByKg ? 'Weight' : 'Quantity'}
+                                </p>
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                                     <div style={{
-                                        display: 'flex', alignItems: 'center', height: 48, width: 130,
+                                        display: 'flex', alignItems: 'center', height: 48, width: sellsByKg ? 168 : 130,
                                         borderRadius: 24, border: `1px solid ${border}`,
                                         background: stepperBg, flexShrink: 0, transition: 'background 200ms, border-color 200ms',
                                     }}>
-                                        <button type="button" onClick={() => setQuantity(q => Math.max(minQty, q - 1))} aria-label="Decrease"
+                                        <button type="button"
+                                            onClick={() => sellsByKg ? setKg(q => clampWholesaleKg(q - 1)) : setQuantity(q => Math.max(minQty, q - 1))}
+                                            aria-label={sellsByKg ? 'Decrease weight' : 'Decrease'}
                                             style={{ flex: 1, height: '100%', background: 'none', border: 'none', cursor: 'pointer', color: textMuted, fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none' }}>−</button>
-                                        <span style={{ minWidth: 28, textAlign: 'center', fontWeight: 700, fontSize: 17, color: textPrim, userSelect: 'none', transition: 'color 200ms' }}>{quantity}</span>
-                                        <button type="button" onClick={() => setQuantity(q => q + 1)} aria-label="Increase"
+                                        {sellsByKg ? (
+                                            <input
+                                                type="number"
+                                                min={WHOLESALE_MIN_KG}
+                                                max={WHOLESALE_MAX_KG}
+                                                inputMode="numeric"
+                                                aria-label="Weight in kilograms"
+                                                value={kg}
+                                                onChange={e => {
+                                                    const next = Math.floor(Number(e.target.value));
+                                                    if (Number.isFinite(next)) setKg(clampWholesaleKg(next));
+                                                }}
+                                                style={{ width: 36, textAlign: 'center', background: 'transparent', border: 'none', color: textPrim, fontWeight: 700, fontSize: 17, outline: 'none' }}
+                                            />
+                                        ) : (
+                                            <span style={{ minWidth: 28, textAlign: 'center', fontWeight: 700, fontSize: 17, color: textPrim, userSelect: 'none', transition: 'color 200ms' }}>{quantity}</span>
+                                        )}
+                                        <button type="button"
+                                            onClick={() => sellsByKg ? setKg(q => clampWholesaleKg(q + 1)) : setQuantity(q => q + 1)}
+                                            aria-label={sellsByKg ? 'Increase weight' : 'Increase'}
                                             style={{ flex: 1, height: '100%', background: 'none', border: 'none', cursor: 'pointer', color: textPrim, fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none', transition: 'color 200ms' }}>+</button>
+                                        {sellsByKg && <span style={{ paddingRight: 14, fontSize: 13, fontWeight: 700, color: textMuted }}>kg</span>}
                                     </div>
 
                                     <button type="button" onClick={handleAddToCart} disabled={outOfStock}
@@ -227,6 +269,11 @@ export default function WholesaleProductClient({ product }: { product: Wholesale
                                         {outOfStock ? 'Out of stock' : addedFeedback ? <><CheckIcon />Added to Cart</> : 'Add to Cart'}
                                     </button>
                                 </div>
+                                {sellsByKg && (
+                                    <p style={{ fontSize: 12, color: limitNote ? '#D32F2F' : textMuted, margin: 0 }}>
+                                        {limitNote || 'Enter a whole number from 1 kg to 5 kg, for example 2 kg or 3 kg.'}
+                                    </p>
+                                )}
 
                                 <Link href={href('/cart')} style={{ fontSize: 13, color: '#CD142C', fontWeight: 600, textDecoration: 'underline' }}>
                                     View cart &amp; send order →

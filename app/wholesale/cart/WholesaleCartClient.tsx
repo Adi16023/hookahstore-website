@@ -21,6 +21,7 @@ import { useAuth } from '../../../components/providers/AuthProvider';
 import { useWholesaleHref } from '../../../lib/config/use-wholesale-path';
 import { useWholesalePricingMap, formatInr, type ProductPricing } from '../../../lib/wholesale/use-wholesale-prices';
 import { newEnquiryRef } from '../../../lib/wholesale/enquiry-ref';
+import { optionWeightKg, WHOLESALE_MAX_KG, WHOLESALE_MIN_KG } from '../../../lib/wholesale/weight';
 import { SITE } from '../../../lib/config/site';
 
 type Profile = { firstName: string; lastName: string; email: string; businessName: string; phone: string; gstNumber: string; tier: string };
@@ -189,28 +190,37 @@ export default function WholesaleCartClient() {
                                 <div style={{ flex: 1, minWidth: 160 }}>
                                     <p style={{ fontSize: 15, fontWeight: 600, color: textPrim, margin: 0 }}>{item.name}</p>
                                     {item.size && <p style={{ fontSize: 13, color: textMuted, margin: '2px 0 0' }}>{item.size}</p>}
-                                    <p style={{ fontSize: 13, color: unavailable ? '#D32F2F' : textMuted, margin: '4px 0 0' }}>
+                                    <p style={{ fontSize: 13, color: unavailable || (item.size != null && (optionWeightKg(item.size) ?? 1) < 1) ? '#D32F2F' : textMuted, margin: '4px 0 0' }}>
                                         {unavailable ? 'No longer available — please remove'
+                                            : item.size != null && (optionWeightKg(item.size) ?? 1) < 1 ? 'Packs under 1 kg are not available — please remove'
                                             : pricesLoading ? 'Loading price…'
-                                            : unit != null ? `${formatInr(unit)} each` : 'Price on request'}
+                                            : unit != null ? `${formatInr(unit)} ${item.size != null && optionWeightKg(item.size) != null ? 'per kg' : 'each'}` : 'Price on request'}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
+                                    {(() => {
+                                        const weight = item.size ? optionWeightKg(item.size) : null;
+                                        const kgLine = weight != null && weight >= 1;
+                                        const maxQty = kgLine ? Math.max(1, Math.floor(WHOLESALE_MAX_KG / weight)) : 100000;
+                                        return (
                                     <div style={{ display: 'flex', alignItems: 'center', height: 40, borderRadius: 20, border: `1px solid ${border}`, background: stepperBg }}>
-                                        <button type="button" aria-label="Decrease quantity" onClick={() => updateQuantity(item.productId, item.variationId, Math.max(1, item.quantity - 1))}
+                                        <button type="button" aria-label="Decrease quantity" onClick={() => updateQuantity(item.productId, item.variationId, Math.max(WHOLESALE_MIN_KG, item.quantity - 1))}
                                             style={{ width: 36, height: '100%', background: 'none', border: 'none', cursor: 'pointer', color: textPrim, fontSize: 18 }}>−</button>
                                         <input
-                                            type="number" min={1} inputMode="numeric" aria-label={`Quantity for ${item.name}`}
+                                            type="number" min={1} max={maxQty} inputMode="numeric" aria-label={`Quantity for ${item.name}`}
                                             value={item.quantity}
                                             onChange={e => {
                                                 const q = Math.floor(Number(e.target.value));
-                                                if (Number.isFinite(q) && q >= 1) updateQuantity(item.productId, item.variationId, Math.min(q, 100000));
+                                                if (Number.isFinite(q) && q >= 1) updateQuantity(item.productId, item.variationId, Math.min(q, maxQty));
                                             }}
                                             style={{ width: 56, textAlign: 'center', background: 'transparent', border: 'none', color: textPrim, fontWeight: 700, fontSize: 15, outline: 'none' }}
                                         />
-                                        <button type="button" aria-label="Increase quantity" onClick={() => updateQuantity(item.productId, item.variationId, item.quantity + 1)}
+                                        {kgLine && <span style={{ fontSize: 12, fontWeight: 700, color: textMuted, paddingRight: 4 }}>kg</span>}
+                                        <button type="button" aria-label="Increase quantity" onClick={() => updateQuantity(item.productId, item.variationId, Math.min(maxQty, item.quantity + 1))}
                                             style={{ width: 36, height: '100%', background: 'none', border: 'none', cursor: 'pointer', color: textPrim, fontSize: 18 }}>+</button>
                                     </div>
+                                        );
+                                    })()}
                                     <p style={{ width: 100, textAlign: 'right', fontSize: 15, fontWeight: 700, color: textPrim, margin: 0 }}>
                                         {lineTotal != null ? formatInr(lineTotal) : '—'}
                                     </p>

@@ -7,6 +7,7 @@ import { useCart } from './providers/CartProvider';
 import type { CartableProduct } from './providers/CartProvider';
 import { useWholesaleSession } from '../lib/auth/use-wholesale-session';
 import { useWholesalePricing, priceFor, formatInr } from '../lib/wholesale/use-wholesale-prices';
+import { optionWeightKg, WHOLESALE_MAX_KG } from '../lib/wholesale/weight';
 import { useWholesaleHref } from '../lib/config/use-wholesale-path';
 import type { ProductBadge } from '../lib/utils/badges';
 import { hasPrice } from '../lib/utils/variations';
@@ -74,7 +75,7 @@ function ProductCard({
     const pathname = usePathname();
     const router = useRouter();
     const isWholesale = forceWholesale || (pathname?.startsWith('/wholesale') ?? false);
-    const { addToCart } = useCart();
+    const { addToCart, cart } = useCart();
     const { loading: sessionLoading, isApproved } = useWholesaleSession();
     const wsHref = useWholesaleHref();
 
@@ -142,11 +143,12 @@ function ProductCard({
             price: isWholesale ? (tierPrice.price != null ? formatInr(tierPrice.price) : '') : displayPrice,
             image: { sourceUrl: image },
         };
-        addToCart(
-            productObj,
-            isWholesale ? tierPrice.variationId : (variationIds[selectedVariation] ?? null),
-            selectedVariation || null,
-        );
+        const variationId = isWholesale ? tierPrice.variationId : (variationIds[selectedVariation] ?? null);
+        if (isWholesale && selectedVariation && optionWeightKg(selectedVariation) != null) {
+            const already = cart.find(item => item.productId === (productId ?? 0) && item.variationId === variationId)?.quantity ?? 0;
+            if (already >= WHOLESALE_MAX_KG) return;
+        }
+        addToCart(productObj, variationId, selectedVariation || null);
         setBtnPressed(true);
         setTimeout(() => setBtnPressed(false), 200);
     };

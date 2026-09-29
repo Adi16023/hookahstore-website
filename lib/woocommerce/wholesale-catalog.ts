@@ -12,6 +12,7 @@
 
 import { wcGetCached } from './index';
 import { HOMEPAGE_BRAND_ALIASES, type HomepageBrandsData, type HomepageProduct } from '../graphql';
+import { optionWeightKg, wholesaleKgUnit } from '../wholesale/weight';
 
 export const WHOLESALE_VISIBILITY_META = 'show_in_wholesale';
 
@@ -25,10 +26,15 @@ export interface WholesaleProduct {
     description: string;
     type: string;               // 'simple' | 'variable' | ...
     stockStatus: string;        // 'instock' | 'outofstock' | 'onbackorder'
-    /** Options of the attribute used for variations (e.g. 50g / 250g / 1kg) */
+    /**
+     * Size options. Weight products expose only the 1 kg pack (50g / 250g are dropped).
+     * Products that are not sold by weight keep their real options.
+     */
     options: string[];
     /** Name of that attribute (e.g. "Size") */
     optionName: string | null;
+    /** True when the variation attribute is a weight (g / kg). Ordered in whole kilograms. */
+    sellsByKg: boolean;
     categories: { slug: string; name: string }[];
     ribbon: string | null;      // ACF ribbon_type (new / topsale / none …)
     moq: number | null;         // ACF wholesale_moq
@@ -72,6 +78,9 @@ export const isWholesaleVisible = (p: { meta_data?: WcMeta[] }) =>
 
 function toWholesaleProduct(p: WcRestProduct): WholesaleProduct {
     const varAttr = p.attributes?.find(a => a.variation) ?? null;
+    const rawOptions = p.type === 'variable' ? (varAttr?.options ?? []) : [];
+    const sellsByKg = rawOptions.some(option => optionWeightKg(option) != null);
+    const kgUnit = wholesaleKgUnit(rawOptions);
     const moqRaw = Number(metaValue(p.meta_data, 'wholesale_moq'));
     const ribbon = metaValue(p.meta_data, 'ribbon_type');
     return {
@@ -82,8 +91,9 @@ function toWholesaleProduct(p: WcRestProduct): WholesaleProduct {
         description: stripHtml(p.short_description) || stripHtml(p.description).slice(0, 220),
         type: p.type,
         stockStatus: p.stock_status,
-        options: p.type === 'variable' ? (varAttr?.options ?? []) : [],
-        optionName: p.type === 'variable' ? (varAttr?.name ?? null) : null,
+        options: sellsByKg ? (kgUnit ? [kgUnit] : []) : rawOptions,
+        optionName: sellsByKg ? 'Weight' : (p.type === 'variable' ? (varAttr?.name ?? null) : null),
+        sellsByKg,
         categories: (p.categories ?? []).map(c => ({ slug: c.slug, name: c.name })),
         ribbon: ribbon && ribbon !== 'none' ? ribbon : null,
         moq: Number.isFinite(moqRaw) && moqRaw > 0 ? moqRaw : null,
