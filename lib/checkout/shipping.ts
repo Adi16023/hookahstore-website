@@ -4,6 +4,7 @@
  * always agree. Shiprocket live rates with the same flat-rate fallback.
  */
 import { getShiprocketRates } from '../shiprocket';
+import { SITE } from '../config/site';
 
 export interface ShippingOption {
     id: string;
@@ -33,4 +34,10 @@ export async function getShippingOptions(postcode: string, weight: number): Prom
         console.error('[shipping] Shiprocket rates failed — using flat rate:', err instanceof Error ? err.message : err);
         return [FALLBACK_SHIPPING];
     }
+}
+
+/** Orders at or above the merchandise threshold ship free. Courier choice is unchanged. */
+export function applyFreeShipping(options: ShippingOption[], subtotal: number): ShippingOption[] {
+    if (!(subtotal >= SITE.freeShippingThreshold)) return options;
+    return options.map(option => ({ ...option, price: 0 }));
 }

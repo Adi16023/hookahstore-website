@@ -12,7 +12,7 @@
  */
 import { wcGet } from '../woocommerce';
 import { CheckoutError, validateAndComputeDiscount } from './coupon';
-import { cartWeightKg, getShippingOptions } from './shipping';
+import { applyFreeShipping, cartWeightKg, getShippingOptions } from './shipping';
 
 export { CheckoutError };
 
@@ -105,7 +105,10 @@ export async function buildQuote(input: QuoteInput): Promise<Quote> {
     const couponCode = input.couponCode?.trim() || null;
     const discount = round2(await validateAndComputeDiscount(couponCode, subtotal));
 
-    const options = await getShippingOptions(input.shipping.postcode, cartWeightKg(input.items));
+    const options = applyFreeShipping(
+        await getShippingOptions(input.shipping.postcode, cartWeightKg(input.items)),
+        subtotal,
+    );
     const ship = options.find(o => o.id === input.shipping.methodId);
     if (!ship) throw new CheckoutError('Your shipping option has changed. Please go back and choose a shipping method again.', 409);
 

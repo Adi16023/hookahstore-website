@@ -643,7 +643,7 @@ function ShippingAddressCard({ form, setForm, onNext, c }: { form: ShippingForm;
 /* ─── Step 3 – Shipping Methods (live from Shiprocket) ──────────────────── */
 interface WcShippingOption { id: string; label: string; description: string; price: number; }
 
-function ShippingMethodCard({ selected, setSelected, onSelectOption, onNext, deliveryPostcode, cartWeight, c }: { selected: string; setSelected: (v: string) => void; onSelectOption?: (opt: WcShippingOption) => void; onNext: () => void; deliveryPostcode: string; cartWeight: number; c: C; }) {
+function ShippingMethodCard({ selected, setSelected, onSelectOption, onNext, deliveryPostcode, cartWeight, subtotal, c }: { selected: string; setSelected: (v: string) => void; onSelectOption?: (opt: WcShippingOption) => void; onNext: () => void; deliveryPostcode: string; cartWeight: number; subtotal: number; c: C; }) {
     const [methods, setMethods] = useState<WcShippingOption[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -653,7 +653,7 @@ function ShippingMethodCard({ selected, setSelected, onSelectOption, onNext, del
         fetch('/api/shipping/rates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ deliveryPostcode, weight: cartWeight }),
+            body: JSON.stringify({ deliveryPostcode, weight: cartWeight, subtotal }),
         })
             .then(r => r.json())
             .then((d: { methods?: WcShippingOption[]; error?: string }) => {
@@ -668,7 +668,7 @@ function ShippingMethodCard({ selected, setSelected, onSelectOption, onNext, del
             .catch(() => setError('Could not load shipping methods. Please refresh.'))
             .finally(() => setLoading(false));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [deliveryPostcode]);
+    }, [deliveryPostcode, subtotal]);
 
     return (
         <div style={{ backgroundColor: c.cardBg, borderRadius: 8, padding: 24, transition: 'background-color 200ms' }}>
@@ -1135,6 +1135,7 @@ export default function CartPageClient() {
                                 onNext={handleShippingMethodNext}
                                 deliveryPostcode={shippingForm.postalCode}
                                 cartWeight={Math.max(0.5, cart.reduce((sum, item) => sum + item.quantity * 0.5, 0))}
+                                subtotal={subtotal}
                                 c={c}
                             />
                         )}

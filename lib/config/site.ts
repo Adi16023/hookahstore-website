@@ -28,9 +28,8 @@ export const SITE = {
 
     gstin: '33ABRFA4433F1ZL',
 
-    // TODO: confirm with client — free-shipping threshold in ₹ (placeholder;
-    // used in the footer, homepage marquee and product pages).
-    freeShippingThreshold: 999,
+    // Merchandise subtotal (₹) at which shipping is free. Cart progress bar and checkout both use this.
+    freeShippingThreshold: 1000,
 
     // TODO: confirm with client — kept the old Mon–Fri 10–6 hours, switched EST → IST
     supportHours: 'Monday to Friday, 10:00 AM - 6:00 PM IST',
@@ -57,5 +56,5 @@ export const LEGAL_LINES = [
     `GSTIN: ${SITE.gstin} | Tel: ${SITE.phone.display}`,
 ] as const;
 
-/** "₹999" — formatted free-shipping threshold */
+/** "₹1,000" — formatted free-shipping threshold */
 export const FREE_SHIPPING_TEXT = `₹${SITE.freeShippingThreshold.toLocaleString('en-IN')}`;

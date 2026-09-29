@@ -7,8 +7,8 @@ import { useTheme } from '../../../components/providers/ThemeProvider';
 const OFFERS = [
     {
         tag: 'Free Shipping',
-        title: 'Free Shipping on Orders ₹999+',
-        desc: 'Spend ₹999 or more and get free standard shipping on your entire order — no coupon needed.',
+        title: 'Free Shipping on Orders ₹1,000+',
+        desc: 'Spend ₹1,000 or more and get free standard shipping on your entire order — no coupon needed.',
         color: '#CD142C',
     },
     {

@@ -6,8 +6,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '../providers/CartProvider';
 import { useTheme } from '../providers/ThemeProvider';
+import { SITE } from '../../lib/config/site';
 
-const FREE_SHIPPING_THRESHOLD = 10000; // ₹
+const FREE_SHIPPING_THRESHOLD = SITE.freeShippingThreshold;
 const T = 'transition: background-color 200ms, color 200ms, border-color 200ms';
 
 /* ─── Theme tokens ───────────────────────────────────────────────────────── */

@@ -144,7 +144,7 @@ const features = [
         id: "free-shipping",
         icon: <IconFreeShipping />,
         label: "Free Shipping",
-        description: `Free delivery across India on orders above ${FREE_SHIPPING_TEXT}.`,
+        description: `Free delivery across India on orders of ${FREE_SHIPPING_TEXT} or more.`,
     },
     {
         id: "customer-service",
