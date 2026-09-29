@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [auth, setAuth] = useState<AuthState>(LOADING_STATE);
 
     const fetchAuth = () => {
-        fetch('/api/auth/me')
+        return fetch('/api/auth/me')
             .then((res) => {
                 if (res.status === 401) {
                     setAuth(GUEST_STATE);

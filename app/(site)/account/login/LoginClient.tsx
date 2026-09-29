@@ -4,11 +4,15 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '../../../../components/providers/ThemeProvider';
+import { useAuth } from '../../../../components/providers/AuthProvider';
 import { getWholesaleUrl } from '../../../../lib/config';
 
 export default function LoginClient() {
     const { dark } = useTheme();
     const router = useRouter();
+    const auth = useAuth();
+    const signedIn = auth.role !== 'loading' && auth.role !== 'not_approved' && auth.userId != null;
+    const displayName = [auth.firstName, auth.lastName].filter(Boolean).join(' ') || 'there';
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -71,6 +75,7 @@ export default function LoginClient() {
                 return;
             }
 
+            await auth.refresh();
             router.push('/account');
         } catch {
             setError('Network error. Please check your connection and try again.');
@@ -93,9 +98,41 @@ export default function LoginClient() {
             <div className="login-page-container" style={{ position: 'relative' }}>
 
                 <h1 className="login-page-title" style={{ fontFamily: "var(--font-montserrat), sans-serif", fontWeight: 600, color: textPrim, textAlign: 'center', margin: 0, transition: 'color 200ms' }}>
-                    Log In
+                    {auth.role === 'loading' ? 'Account' : signedIn ? 'Your account' : 'Log In'}
                 </h1>
 
+                {auth.role === 'loading' ? (
+                    <p style={{ textAlign: 'center', color: textMuted, fontSize: '14px', lineHeight: '20px' }}>Checking your account…</p>
+                ) : signedIn ? (
+                    <div className="login-page-form" style={{ textAlign: 'center', paddingBottom: '48px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 600, fontSize: '18px', lineHeight: '28px', color: textPrim }}>
+                            Hello, {displayName}
+                        </p>
+                        {auth.email && (
+                            <p style={{ margin: '0 0 28px', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: textMuted }}>
+                                {auth.email}
+                            </p>
+                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+                            <Link href="/account" className="login-page-btn" style={{ backgroundColor: '#D32F2F', borderRadius: '98px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', width: '100%', maxWidth: '280px' }}>
+                                <span style={{ fontWeight: 600, fontSize: '16px', lineHeight: '20px', color: '#ffffff', letterSpacing: '1px', textTransform: 'uppercase' }}>My Account</span>
+                            </Link>
+                            <Link href="/account/orders" style={{ fontWeight: 600, fontSize: '14px', lineHeight: '20px', color: linkRed, textDecoration: 'underline' }}>
+                                My Orders
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    await fetch('/api/auth/logout', { method: 'POST' });
+                                    await auth.refresh();
+                                }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600, fontSize: '14px', lineHeight: '20px', color: textMuted, textDecoration: 'underline' }}
+                            >
+                                Log out
+                            </button>
+                        </div>
+                    </div>
+                ) : (
                 <form className="login-page-form" onSubmit={handleSubmit} noValidate style={{ position: 'relative' }}>
 
                     {error && (
@@ -190,6 +227,7 @@ export default function LoginClient() {
                     </div>
 
                 </form>
+                )}
             </div>
 
             <style>{`
