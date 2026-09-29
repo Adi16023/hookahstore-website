@@ -1,13 +1,13 @@
 'use client';
 
-// Scrolls continuously and never pauses on hover (client requirement).
-// prefers-reduced-motion slows it down instead — see .animate-marquee-infinite in globals.css.
+// Scrolls continuously. Pauses while the pointer is over the bar
+// (.warning-marquee:hover in globals.css). prefers-reduced-motion slows it.
 export default function TopWarningBar() {
     return (
         <aside
             role="complementary"
             aria-label="Health Warning"
-            className="w-full h-[63px] overflow-hidden relative"
+            className="warning-marquee w-full h-[63px] overflow-hidden relative"
         >
             <div
                 className="flex h-full absolute whitespace-nowrap animate-marquee-infinite"

@@ -107,9 +107,13 @@ html:not([data-dark="true"]) {
     animation: marquee 20s linear infinite;
 }
 
-/* Top warning banner — never pauses (no :hover / play-state rules on purpose) */
+/* Top warning banner — scrolls until the pointer is over the bar */
 .animate-marquee-infinite {
     animation: marquee 60s linear infinite;
+}
+
+.warning-marquee:hover .animate-marquee-infinite {
+    animation-play-state: paused;
 }
 
 /* Reduced motion: keep scrolling (warning must stay readable), just slower */
