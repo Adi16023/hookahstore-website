@@ -73,6 +73,41 @@ export async function wcSetCustomerRole(customerId: number, role: WcRole): Promi
 }
 
 /**
+ * Set a user's password through the WordPress Users API.
+ *
+ * WooCommerce PUT /customers/{id} { password } fails for wholesale_customer
+ * and wholesale_pending — those roles are not in WooCommerce's own role list,
+ * so the customer update is rejected and the reset page shows a generic error.
+ */
+export async function wpSetUserPassword(userId: number, password: string): Promise<void> {
+    const wpBase   = process.env.WOOCOMMERCE_URL ?? '';
+    const username = process.env.WP_ADMIN_USERNAME;
+    const appPass  = process.env.WP_ADMIN_APP_PASSWORD;
+
+    if (!username || !appPass) {
+        throw new Error(
+            'WordPress admin credentials (WP_ADMIN_USERNAME / WP_ADMIN_APP_PASSWORD) are not set.'
+        );
+    }
+
+    const res = await fetch(`${wpBase}/wp-json/wp/v2/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+            Authorization: `Basic ${btoa(`${username}:${appPass}`)}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+    });
+
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { message?: string; code?: string };
+        throw new Error(
+            `WP Users API password update failed [${res.status}]: ${body.message ?? body.code ?? 'unknown error'}`
+        );
+    }
+}
+
+/**
  * Store wholesale business meta and mark approval status on a customer.
  */
 export async function wcSetWholesaleMeta(

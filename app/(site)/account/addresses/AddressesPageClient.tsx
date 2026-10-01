@@ -59,6 +59,20 @@ const FIELD_CONFIG = [
 
 const BILLING_ONLY = { key: 'email', label: 'Email', half: false } as const;
 
+const AUTOCOMPLETE: Record<string, string> = {
+    first_name: 'given-name',
+    last_name: 'family-name',
+    company: 'organization',
+    address_1: 'address-line1',
+    address_2: 'address-line2',
+    city: 'address-level2',
+    state: 'address-level1',
+    postcode: 'postal-code',
+    country: 'country',
+    phone: 'tel',
+    email: 'email',
+};
+
 export default function AddressesPageClient() {
     const { dark } = useTheme();
     const { role } = useAuth();
@@ -181,12 +195,10 @@ export default function AddressesPageClient() {
         );
     }
 
-    function EditModal() {
-        if (!editType) return null;
-        const isBilling = editType === 'billing';
-        const fields = isBilling ? [...FIELD_CONFIG, BILLING_ONLY] : FIELD_CONFIG;
+    const isBilling = editType === 'billing';
+    const fields = isBilling ? [...FIELD_CONFIG, BILLING_ONLY] : FIELD_CONFIG;
 
-        return (
+    const editModal = !editType ? null : (
             <div
                 style={{ position: 'fixed', inset: 0, zIndex: 100, backgroundColor: overlayBg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
                 onClick={e => { if (e.target === e.currentTarget) setEditType(null); }}
@@ -206,6 +218,8 @@ export default function AddressesPageClient() {
                                     {f.label}
                                 </label>
                                 <input
+                                    name={f.key}
+                                    autoComplete={AUTOCOMPLETE[f.key]}
                                     value={form[f.key as keyof AddressData] ?? ''}
                                     onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                                     style={inputStyle(f.half)}
@@ -238,8 +252,7 @@ export default function AddressesPageClient() {
                     </div>
                 </div>
             </div>
-        );
-    }
+    );
 
     return (
         <div style={{ backgroundColor: pageBg, minHeight: '100vh', width: '100%', transition: 'background-color 200ms' }}>
@@ -260,7 +273,7 @@ export default function AddressesPageClient() {
                 <PageContent mobile />
             </div>
 
-            <EditModal />
+            {editModal}
         </div>
     );
 

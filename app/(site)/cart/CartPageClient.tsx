@@ -571,6 +571,16 @@ function CompletedStep({ title, summary, onEdit, c }: { title: string; summary: 
 
 /* ─── Shipping form types + helpers ─────────────────────────────────────── */
 type ShippingForm = { firstName: string; lastName: string; country: string; phone: string; street: string; addressLine2: string; city: string; state: string; postalCode: string; };
+
+const COUNTRY_LABELS: Record<string, string> = {
+    IN: 'India', US: 'United States', GB: 'United Kingdom', CA: 'Canada', AU: 'Australia',
+};
+
+function countryLabel(code: string): string {
+    const value = code.trim();
+    if (!value) return '';
+    return COUNTRY_LABELS[value.toUpperCase()] ?? value;
+}
 function SField({ label, required, placeholder, value, onChange, type = 'text', error, c }: { label: string; required?: boolean; placeholder: string; value: string; onChange: (v: string) => void; type?: string; error?: string; c: C; }) {
     return (
         <div>
@@ -1078,6 +1088,36 @@ export default function CartPageClient() {
         }));
         setCheckoutStep(step => (step === 'step1' ? 'step2' : step));
     }, [signedIn, auth.email, auth.firstName, auth.lastName]);
+
+    useEffect(() => {
+        if (!signedIn) return;
+        let active = true;
+        fetch('/api/account/addresses', { credentials: 'include' })
+            .then(res => res.ok ? res.json() : null)
+            .then((data: { billing?: Record<string, string>; shipping?: Record<string, string> } | null) => {
+                if (!active || !data) return;
+                const billing = data.billing ?? {};
+                const shipping = data.shipping ?? {};
+                const saved = shipping.address_1 ? shipping : billing;
+                if (!saved.address_1 && !saved.city && !saved.postcode) return;
+                setShippingForm(form => {
+                    if (form.street || form.city || form.postalCode) return form;
+                    return {
+                        firstName: form.firstName || saved.first_name || billing.first_name || auth.firstName || '',
+                        lastName: form.lastName || saved.last_name || billing.last_name || auth.lastName || '',
+                        phone: saved.phone || billing.phone || '',
+                        street: saved.address_1 || '',
+                        addressLine2: saved.address_2 || '',
+                        city: saved.city || '',
+                        state: saved.state || '',
+                        postalCode: saved.postcode || '',
+                        country: countryLabel(saved.country || billing.country || '') || 'India',
+                    };
+                });
+            })
+            .catch(() => {});
+        return () => { active = false; };
+    }, [signedIn, auth.firstName, auth.lastName]);
     const handleShippingNext = () => setCheckoutStep('step3');
     const handleShippingMethodNext = () => setCheckoutStep('step4');
     const [customerDob, setCustomerDob] = useState('');

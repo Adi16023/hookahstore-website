@@ -2,12 +2,14 @@ export const runtime = 'edge';
 /**
  * POST /api/auth/reset-password
  *
- * Validates the reset JWT, updates the WC customer password via REST API,
- * sends a confirmation email.
+ * Validates the reset JWT, updates the WordPress user password, then sends
+ * a confirmation email. Wholesale roles cannot be updated through WooCommerce's
+ * customer endpoint, so the password is written with the WordPress Users API.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyResetToken } from '../../../../lib/auth';
-import { wcPut, wcGet } from '../../../../lib/woocommerce';
+import { wcGet } from '../../../../lib/woocommerce';
+import { wpSetUserPassword } from '../../../../lib/woocommerce/wholesale';
 import { sendPasswordResetSuccessEmail } from '../../../../lib/email/send-emails';
 
 function json(body: object, status: number) {
@@ -32,8 +34,9 @@ export async function POST(req: NextRequest) {
         const payload = await verifyResetToken(token);
         if (!payload) return json({ error: 'This reset link is invalid or has expired.' }, 400);
 
-        /* Update WC customer password directly */
-        await wcPut(`customers/${payload.customerId}`, { password });
+        /* WordPress user id is the WooCommerce customer id. WC's customer
+           endpoint rejects password changes for wholesale roles. */
+        await wpSetUserPassword(Number(payload.customerId), password);
 
         /* Fetch customer for confirmation email */
         let firstName = 'there';
