@@ -177,6 +177,8 @@ function wam_handle_approve_user(): void {
 	$user->set_role( 'wholesale_customer' );
 	$tier = isset( $_POST['wam_tier'] ) ? wam_sanitize_tier( wp_unslash( $_POST['wam_tier'] ) ) : WAM_DEFAULT_TIER;
 	update_user_meta( $user_id, WAM_TIER_META, $tier );
+	update_user_meta( $user_id, 'account_type', 'wholesale' );
+	update_user_meta( $user_id, 'approval_status', 'approved' );
 
 	// 6. Notify Next.js to send the approval email.
 	wam_send_approval_webhook( $user_id, $user->user_email, $user->display_name );

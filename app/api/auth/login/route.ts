@@ -77,8 +77,11 @@ export async function POST(req: NextRequest) {
         const accountType     = wcCustomer ? await wcGetCustomerMeta(wcCustomer, 'account_type').catch(() => '') : '';
         const approvalStatus  = wcCustomer ? await wcGetCustomerMeta(wcCustomer, 'approval_status').catch(() => '') : '';
         const isWholesaleApp  = accountType === 'wholesale';
-        const isPending       = wcRole === 'wholesale_pending' || (isWholesaleApp && approvalStatus === 'pending');
+        // WordPress approval sets the role to wholesale_customer and does not
+        // always update approval_status. A real wholesale role wins over a stale
+        // "pending" flag left from signup.
         const isApproved      = wcRole === 'wholesale_customer' || (isWholesaleApp && approvalStatus === 'approved');
+        const isPending       = !isApproved && (wcRole === 'wholesale_pending' || (isWholesaleApp && approvalStatus === 'pending'));
 
         // Block pending wholesale accounts from logging in anywhere
         if (isPending) {

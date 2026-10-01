@@ -237,7 +237,7 @@ function ProductCard({
 
                 {/* Title */}
                 <h3
-                    className="text-[16px] font-semibold leading-[1.54] capitalize font-montserrat mt-[8px]"
+                    className="text-[16px] font-semibold leading-[1.54] capitalize font-montserrat mt-[8px] line-clamp-2"
                     style={{ color: 'var(--clr-text)' }}
                 >
                     {title}
@@ -255,16 +255,16 @@ function ProductCard({
                 {isWholesale ? (
                     sessionLoading ? (
                         /* Skeleton while session loads — prevents layout shift */
-                        <div style={{ marginTop: 16, height: 18, width: 80, borderRadius: 4, background: 'rgba(255,255,255,0.08)', animation: 'pulse 1.4s ease-in-out infinite' }} />
+                        <div style={{ marginTop: 'auto', paddingTop: 16, height: 18, width: 80, borderRadius: 4, background: 'rgba(255,255,255,0.08)', animation: 'pulse 1.4s ease-in-out infinite' }} />
                     ) : isApproved ? (
                         /* Approved wholesale_customer — tier price (or "Price on request") + cart */
                         <>
                             {priceLoading ? (
-                                <div style={{ marginTop: 16, height: 18, width: 80, borderRadius: 4, background: 'var(--clr-overlay)', animation: 'pulse 1.4s ease-in-out infinite' }} />
+                                <div style={{ marginTop: 'auto', paddingTop: 16, height: 18, width: 80, borderRadius: 4, background: 'var(--clr-overlay)', animation: 'pulse 1.4s ease-in-out infinite' }} />
                             ) : (
                                 <p
-                                    className="text-[12px] font-semibold uppercase font-montserrat mt-[16px]"
-                                    style={{ color: 'var(--clr-text)' }}
+                                    className="text-[12px] font-semibold uppercase font-montserrat"
+                                    style={{ color: 'var(--clr-text)', marginTop: 'auto', paddingTop: 16 }}
                                 >
                                     {tierPrice.price != null ? formatInr(tierPrice.price) : 'Price on request'}
                                 </p>
@@ -296,9 +296,11 @@ function ProductCard({
                         <a
                             href={wsHref('/login')}
                             onClick={(e) => e.stopPropagation()}
-                            className="font-montserrat mt-[16px]"
+                            className="font-montserrat"
                             style={{
                                 display: 'inline-block',
+                                marginTop: 'auto',
+                                paddingTop: 16,
                                 fontSize: '12px',
                                 fontWeight: 600,
                                 color: '#CD142C',
@@ -314,8 +316,8 @@ function ProductCard({
                     /* Retail — show price and cart button as before */
                     <>
                         <p
-                            className="text-[12px] font-semibold uppercase font-montserrat mt-[16px]"
-                            style={{ color: 'var(--clr-text)' }}
+                            className="text-[12px] font-semibold uppercase font-montserrat"
+                            style={{ color: 'var(--clr-text)', marginTop: 'auto', paddingTop: 16 }}
                         >
                             {displayPrice}
                         </p>
