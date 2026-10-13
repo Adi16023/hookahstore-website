@@ -9,11 +9,22 @@ import { useRouter, usePathname } from 'next/navigation';
 const DEV_TEST_MODE = false;
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Legal and support pages must open with no popup so payment reviewers can read them. */
+const OPEN_PATHS = new Set([
+    '/about',
+    '/contact',
+    '/terms-and-conditions',
+    '/privacy-policy',
+    '/shipping-and-returns',
+    '/cookies-policy',
+]);
+
 /**
  * AgeGate — Shows a "Are you 21 or older?" popup modal overlay.
  * YES → navigates to /age-verification for DOB check.
  * NO  → shows blocked message inside the modal.
  * Once verified (localStorage flag), popup never shows again.
+ * Policy pages listed in OPEN_PATHS stay open.
  */
 export default function AgeGate({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -23,8 +34,8 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
     const [denied, setDenied] = useState(false);
 
     useEffect(() => {
-        // Skip popup on the verification page itself
-        if (pathname === '/age-verification') return;
+        // Skip the verification page and public policy pages
+        if (pathname === '/age-verification' || OPEN_PATHS.has(pathname)) return;
 
         if (DEV_TEST_MODE) {
             // Always show in test mode — ignores localStorage

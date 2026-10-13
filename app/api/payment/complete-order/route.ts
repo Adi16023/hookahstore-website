@@ -1,4 +1,6 @@
-export const runtime = 'edge';
+// Node, not Edge: Razorpay's firewall returns HTTP 406 for the
+// x-middleware-subrequest header that Edge fetch adds.
+export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { wcPost } from '../../../../lib/woocommerce';
